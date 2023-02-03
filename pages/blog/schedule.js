@@ -1,23 +1,85 @@
-import { client } from 'lib/api'
+import { getPostBySlug } from 'lib/api'
+import { extractText } from '../../lib/extract-text'
+import Meta from 'components/meta'
+import Container from 'components/container'
+import PostHeader from 'components/post-header'
+import Image from 'next/image'
+import PostBody from '../../components/post-body'
+import PostCategories from '../../components/post-categories'
+import {
+  TwoColumn,
+  TwoColumnMain,
+  TwoColumnSidebar,
+} from 'components/two-column'
+import ConvertBody from 'components/convert-body'
 
-export default function Schedule() {
-  return <h1>記事のタイトル</h1>
+export default function Schedule({
+  title,
+  publish,
+  content,
+  eyecatch,
+  categories,
+  description,
+}) {
+  return (
+    <Container>
+      <Meta
+        pageTitle={title}
+        pageDesc={description}
+        pageImg={eyecatch.url}
+        pageImgW={eyecatch.width}
+        pageImgH={eyecatch.height}
+      />
+      <article>
+        <PostHeader
+          title={title}
+          subtitle={'ブログアーティクル'}
+          publish={publish}
+        />
+        <figure>
+          <Image
+            src={eyecatch.url}
+            alt=""
+            layout="responsive"
+            width={eyecatch.width}
+            height={eyecatch.height}
+            sizes="(min-width: 1152px) 1152px, 100vw"
+            priority
+          />
+        </figure>
+
+        <TwoColumn>
+          <TwoColumnMain>
+            <PostBody>
+              <ConvertBody contentHTML={content} />
+            </PostBody>
+          </TwoColumnMain>
+          <TwoColumnSidebar>
+            <PostCategories categories={categories} />
+          </TwoColumnSidebar>
+        </TwoColumn>
+      </article>
+    </Container>
+  )
 }
 
 export async function getStaticProps() {
-  const resPromise = client.get({
-    endpoint: 'blogs',
-  })
-  // resPromise.then((res) => console.log(res)).catch((err) => console.log(err))
+  const slug = 'schedule'
+  const post = await getPostBySlug(slug)
+  // console.log('デバッグ')
+  // console.log(post)
+  // console.log(slug)
 
-  try {
-    const res = await resPromise
-    console.log(res)
-  } catch (err) {
-    console.log(err)
-  }
+  const description = extractText(post.content)
 
   return {
-    props: {},
+    props: {
+      title: post.title,
+      publish: post.publishDate,
+      content: post.content,
+      eyecatch: post.eyecatch,
+      categories: post.categories,
+      description: description,
+    },
   }
 }
